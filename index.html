@@ -1,0 +1,74 @@
+<html>
+  <head>
+  <link rel="icon" href="favicon.png" sizes="512x512" type="image/png">
+  <title>Vib-CUE</title>
+  <style>
+    @font-face {
+      font-family: vibri;
+      src: url(font/vibri.ttf);
+    }
+    p, h1, h2, h3, h4, h5, h6, span, a, input {
+      font-family: "vibri";
+      color: white;
+      background-color: black;
+    }
+    body {
+      background-color: black;
+    }
+    button {
+      background-color: black;
+      color: white;
+      border-color: white;
+      border-style: solid;
+      font-family: "vibri";
+      outline: none;
+      cursor: pointer;
+    }
+    button.big {
+      font-size: 36px;
+      padding: 50px;
+    }
+
+    button.med {
+      font-size: 20px;
+      padding: 15px;
+    }
+
+    .cn {
+      text-align: center;
+    }
+    div.cn {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    #content {
+      width: 100%;
+    }
+    .song {
+      border-style: solid;
+      border-color: grey;
+      margin-bottom: 10px;
+      margin: auto;
+      width: fit-content;
+    }
+  </style>
+  </head>
+  <body ondrop="handleDrop(event)" ondragover="pd(event)" ondragenter="pd(event)" onclick="saveNames()">
+    <div style="width: 100%; display: flex; justify-content: center;">
+      <img src="vibriCD.png" class=cn width=42>
+      <h1 class=cn >Vib-CUE</h1>
+      <img src="vibriCD.png" class=cn width=42>
+    </div>
+    <p class=cn style="font-size: 8px;">Tool created by <a href="https://twitter.com/CCircus445">CCircus445</a> on Twitter</p>
+    <p class=cn style="font-size: 8px;">Font created by <a href="https://www.deviantart.com/puzzlypiece">PuzzlyPiece</a> on DeviantArt</p>
+    <br>
+    <div id="content">
+      <div style="width: 100%; display: flex; justify-content: center;">
+        <button class=big id="openCue" onclick="createOpenDialog()">Open a CUE file</button>
+        <button class=big id="createCue" onclick="createCue()">Create a CUE file</button>
+      </div>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>
