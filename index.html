@@ -52,21 +52,40 @@
       margin: auto;
       width: fit-content;
     }
+    div.setTrack {
+      margin-left: 20%;
+    }
+    .label {
+      font-size: 30px;
+    }
+    .timer {
+      width: 60px;
+    }
+    select {
+      background-color: black;
+      height: 30px;
+      vertical-align: bottom;
+      font-size: 30px;
+      color: white;
+      font-family: vibri;
+    }
   </style>
   </head>
   <body ondrop="handleDrop(event)" ondragover="pd(event)" ondragenter="pd(event)" onclick="saveNames()">
     <div style="width: 100%; display: flex; justify-content: center;">
-      <img src="vibriCD.png" class=cn width=42 height=75>
+      <img src="vibriCD.png" class=cn width=42>
       <h1 class=cn >Vib-CUE</h1>
-      <img src="vibriCD.png" class=cn width=42 height=75>
+      <img src="vibriCD.png" class=cn width=42>
     </div>
     <p class=cn style="font-size: 8px;">Tool created by <a href="https://twitter.com/CCircus445">CCircus445</a> on Twitter</p>
     <p class=cn style="font-size: 8px;">Font created by <a href="https://www.deviantart.com/puzzlypiece">PuzzlyPiece</a> on DeviantArt</p>
+    <p class=cn style="font-size: 8px;">Version 2.0 because I did a stupid the first time.</p>
     <br>
     <div id="content">
       <div style="width: 100%; display: flex; justify-content: center;">
         <button class=big id="openCue" onclick="createOpenDialog()">Open a CUE file</button>
         <button class=big id="createCue" onclick="createCue()">Create a CUE file</button>
+        <button class=big id="help" onclick="help()">Help</button>
       </div>
     </div>
     <script src="index.js"></script>
