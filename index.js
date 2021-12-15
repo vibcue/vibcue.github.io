@@ -1,6 +1,8 @@
 var cueParts = [];
 var cueHtml = [];
+var debug_trackList = [];
 var isEditor = false;
+var baseUrl = window.location.href.split("#")[0];
 const addButton = `
 <div class="song" id="addButton" style="padding-left: 50; padding-right: 50; text-align: center; font-size: 30px;" onclick="addFile()"><p style="user-select: none;">Add file</p></div>
 `
@@ -263,6 +265,7 @@ function refreshList() {
     }
   }
   */
+  /*
   let cntr = 0;
   let pco = 0;
   for (let i of cueParts) {
@@ -272,19 +275,39 @@ function refreshList() {
       cntr++;
       j.trackno = cntr;
     }
+  }*/
+  debug_trackList = [];
+  let cntr = 0;
+  let pco = 0;
+  for (let i of cueParts) {
+    pco++;
+    i.position = pco;
+  }
+  for (let i of cueParts) {
+    for (let j of i.tracks) {
+      cntr++;
+      j.trackno = cntr;
+      debug_trackList.push(j);
+    }
   }
 }
 
 function moveUpFile(t) {
   saveNames()
+  // Highlight song element for navigation
   var l = cueParts.length - 1;
+  var stopped = false;
   if (t == 1) {
     [cueParts[l], cueParts[0]] = [cueParts[0], cueParts[l]]
+    stopped = true;
   } else {
     [cueParts[t-2], cueParts[t-1]] = [cueParts[t-1], cueParts[t-2]]
   }
   refreshList();
   renderCue();
+  if (!stopped) {
+    window.location.href = baseUrl + "#song" + (t - 1)
+  }
 }
 
 function moveUp(loc) {
@@ -296,20 +319,26 @@ function moveUp(loc) {
 function moveDownFile(t) {
   saveNames()
   var l = cueParts.length - 1;
+  var stopped = false;
   if (t == l+1) {
     [cueParts[0], cueParts[l]] = [cueParts[l], cueParts[0]]
+    stopped = true;
   } else {
     [cueParts[t-1], cueParts[t]] = [cueParts[t], cueParts[t-1]]
   }
   refreshList();
   renderCue();
+  if (!stopped) {
+    window.location.href = baseUrl + "#song" + (t + 1)
+  }
 }
 
 function dupeFile(t) {
   saveNames()
-  thing = cueParts[t-1]
+  thing = JSON.parse(JSON.stringify(cueParts[t-1]));
   //console.log(thing)
   //For some reason, when I duplicated just the object, it changed the original one.
+  //Found the reason, it was referencing the original object!
   newone = new CUEReference();
   newone.position = t+1
   newone.filename = thing.filename;
