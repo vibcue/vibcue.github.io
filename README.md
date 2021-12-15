@@ -1,4 +1,4 @@
-#Vib-CUE
+# Vib-CUE
 
 Welcome to Vib-CUE. This program is designed to make the development of Vib-Ribbon level packs easier. This tutorial will go over how to use this website.
 
