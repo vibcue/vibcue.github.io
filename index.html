@@ -1,6 +1,31 @@
 <html>
   <head>
   <link rel="icon" href="favicon.png" sizes="512x512" type="image/png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <script>
+    var langs = {};
+    var lang;
+
+    // Get language from local storage
+    if (!localStorage.getItem("language")) {
+      // Check browser language against available languages and set it to the appropriate language automatically
+      if (langs.hasOwnProperty(navigator.language)) {
+        lang = navigator.language;
+      } else if (langs.hasOwnProperty(navigator.language.split("-")[0])) {
+        lang = navigator.language.split("-")[0];
+      } else {
+        lang = "en";
+      }
+      localStorage.setItem("language", lang);
+    } else {
+      lang = localStorage.getItem("language");
+    }
+    function tr(strn) {
+      return langs[lang][strn] || strn;
+    }
+  </script>
+  <script src="lang/en.js"></script>
+  <script src="lang/es.js"></script>
   <title>Vib-CUE</title>
   <style>
     @font-face {
@@ -12,6 +37,29 @@
       color: white;
       background-color: black;
     }
+    input {
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      border-bottom: 3px solid white !important;
+      outline: none;
+    }
+    input:disabled {
+      border-bottom: black !important;
+    }
+
+    /*Hide spinner near numerical inputs; https://stackoverflow.com/a/4298216/10485927*/
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        /* display: none; <- Crashes Chrome on hover */
+        -webkit-appearance: none;
+        margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+    }
+
+    input[type=number] {
+        -moz-appearance:textfield; /* Firefox */
+    }
+
     body {
       background-color: black;
     }
@@ -51,43 +99,128 @@
       margin-bottom: 10px;
       margin: auto;
       width: fit-content;
+      padding-top: 5px;
+      padding-bottom: 5px;
     }
     div.setTrack {
-      margin-left: 20%;
+      /*margin-left: 20%;*/
     }
     .label {
       font-size: 30px;
+      padding-left: 5px;
     }
     .timer {
       width: 60px;
     }
     select {
-      background-color: black;
-      height: 30px;
+      background-color: #292929;
+      height: 40px;
       vertical-align: bottom;
       font-size: 30px;
       color: white;
       font-family: vibri;
+      border: none;
+    }
+    .itemblock {
+      display: inline-block;
+      padding-top: 10px;
+      padding-bottom: 10px;
+      padding-right: 5px;
+      vertical-align: middle;
+    }
+    
+
+    .nameinput {
+      font-size: 30px;
+      width: 700px;
+      outline: none;
+      vertical-align: middle;
+    }
+    .trackNumber {
+      vertical-align: middle;
+      padding-left: 5px;
+    }
+
+    .file {
+      margin-top: 10px;
+    }
+
+    /*mobile code*/
+    @media only screen and (max-width: 768px) {
+      button.big {
+        display: block;
+        width: 100%;
+      }
+      #btnContainer {
+        display: block !important;
+        justify-content: none;
+        width: auto;
+        
+      }
+      .nameinput {
+        width: 100%;
+      }
+
+      .itemblock > img {
+        width: 40px;
+        height: 40px;
+      }
+
+      .song {
+        width: 100%;
+      }
+
+      #addButton {
+        width: fit-content !important;
+      }
+
+      .saveButton {
+        margin-bottom: 20px;
+        padding: 0 !important;
+        width: 100%;
+        font-size: 24px !important;
+      }
+
+      .setTrack {
+        width: 80%;
+        margin-left: 20%;
+      }
     }
   </style>
   </head>
   <body ondrop="handleDrop(event)" ondragover="pd(event)" ondragenter="pd(event)" onclick="saveNames()">
+    <div style="margin-bottom: 5px;">
+      <select id="language" onchange="setLanguage()" style="vertical-align: middle;"></select>
+      <img src="language.png" width="40" style="padding-left: 5px; vertical-align: middle;">
+    </div>
     <div style="width: 100%; display: flex; justify-content: center;">
       <img src="vibriCD.png" class=cn width=42>
       <h1 class=cn >Vib-CUE</h1>
       <img src="vibriCD.png" class=cn width=42>
     </div>
-    <p class=cn style="font-size: 16px;">Tool created by <a href="https://github.com/PlayNowKnux">PlayNowKnux</a> on Twitter</p>
-    <p class=cn style="font-size: 16px;">Font created by <a href="https://www.deviantart.com/puzzlypiece">PuzzlyPiece</a> on DeviantArt</p>
-    <p class=cn style="font-size: 16px;">I finally fixed it!</p>
+    <p class=cn style="font-size: 16px;" id="tool_credit">Tool created by <a href="https://github.com/PlayNowKnux">PlayNowKnux</a></p>
+    <p class=cn style="font-size: 16px;" id="font_credit">Font created by <a href="https://www.deviantart.com/puzzlypiece">PuzzlyPiece</a> on DeviantArt</p>
     <br>
     <div id="content">
-      <div style="width: 100%; display: flex; justify-content: center;">
+      <div id="btnContainer" style="width: 100%; display: flex; justify-content: center;">
         <button class=big id="openCue" onclick="createOpenDialog()">Open a CUE file</button>
         <button class=big id="createCue" onclick="createCue()">Create a CUE file</button>
         <button class=big id="help" onclick="help()">Help</button>
       </div>
     </div>
     <script src="index.js"></script>
+    <script>
+      var lang_dropdown = el("language")
+      for (let l in langs) {
+        lang_dropdown.innerHTML += `<option value="${l}">${langs[l]["langname"]}</option>`
+      }
+      lang_dropdown.value = lang;
+
+      el("tool_credit").innerHTML = tr("tool_credit")
+      el("font_credit").innerHTML = tr("font_credit")
+      el("openCue").innerHTML = tr("open_cue")
+      el("createCue").innerHTML = tr("create_cue")
+      el("help").innerHTML = tr("help");
+    </script>
   </body>
 </html>

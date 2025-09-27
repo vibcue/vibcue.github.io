@@ -3,12 +3,17 @@ var cueHtml = [];
 var debug_trackList = [];
 var isEditor = false;
 var baseUrl = window.location.href.split("#")[0];
+var isMobile = document.body.clientWidth < 768;
 const addButton = `
-<div class="song" id="addButton" style="padding-left: 50; padding-right: 50; text-align: center; font-size: 30px;" onclick="addFile()"><p style="user-select: none;">Add file</p></div>
+<div class="song" id="addButton" style="padding-left: 50; padding-right: 50; text-align: center; font-size: 30px;" onclick="addFile()"><p style="user-select: none;">${tr("add_file")}</p></div>
 `
 const saveButton = `
-<div class="song" style="padding-left: 25; padding-right: 25; text-align: center; font-size: 18px;" onclick="/*addSong()*/"><a id="saveLink">Save (right click and then click Save Link As)</a></div>
+<div class="song saveButton" style="padding-left: 25; padding-right: 25; text-align: center; font-size: 18px;" onmousedown="organize()"><a id="saveLink">${isMobile ? tr("save_link_mobile") : tr("save_link")}</a></div>
 `
+function checkRightClick() {
+  console.log("all good!")
+}
+
 function pd(evt) {
   evt.preventDefault();
 }
@@ -22,6 +27,18 @@ if (!ra) {
     }
     return st
   }
+}
+
+String.prototype.zp = function() {
+  // add an extra 0 to the beginning of the string
+  if (this.length < 2) {
+    return "0" + this;
+  }
+  return this;
+}
+
+Number.prototype.zp = function() {
+  return this.toString().zp();
 }
 
 Array.prototype.insertAt = function(index, value) {
@@ -42,7 +59,7 @@ Array.prototype.findTrack = function(t) {
 }
 
 var CUETrack = function() {
-  this.title = "Untitled";
+  this.title = tr("untitled");
   this.trackno = 0;
   this.start = {
     mins: 0,
@@ -82,18 +99,18 @@ function createOpenDialog() {
   window.cfile = false;
   el("content").innerHTML = `
   <div class=cn style="display: block;">
-  <h3>Upload your CUE file here</h3>
+  <h3>${tr("upload_here")}</h3>
   <br><br>
   <input id="cueOpen" type="file" style="border-style: solid; border-color: white;" accept=".cue">
   <br><br>
-  <button class=med onclick="checkCUE()">OK</button>
+  <button class=med onclick="checkCUE()">${tr("ok")}</button>
   </div>
   `
 }
 
 function checkCUE() {
   if (!el('cueOpen').files[0]) {
-    alert("Grrrrrrrgh! You didn't upload a file!")
+    alert(tr("upload_error_nofile"));
   } else {
     readCUE(el('cueOpen').files[0])
   }
@@ -218,7 +235,7 @@ function renderCue() {
   var a = el("saveLink");
   a.download = "levelpack.cue";
   a.href = (window.webkitURL || window.URL).createObjectURL(blob);
-  a.dataset.downloadurl = ['text/plain', a.download, a.href].join(':');
+  a.dataset.downloadurl = ['application/x-cue', a.download, a.href].join(':');
   //console.log("cueParts")
 
 }
@@ -277,8 +294,8 @@ function refreshList() {
     }
   }*/
   debug_trackList = [];
-  let cntr = 0;
-  let pco = 0;
+  let cntr = 0; // counter
+  let pco = 0; // position counter
   for (let i of cueParts) {
     pco++;
     i.position = pco;
@@ -356,35 +373,44 @@ function delFile(t) {
   renderCue();
 }
 
-function addSong(f) {
+function addSong(file) {
   saveNames();
-  let s = new CUETrack();
-  s.wasModded = true;
-  cueParts[f-1].tracks.push(s);
+  let song = new CUETrack();
+  song.wasModded = true;
+  cueParts[file-1].tracks.push(song);
   refreshList();
   renderCue();
 }
 
 function saveNames() {
-  for (let i = 1; i <= cueParts.length; i++) {
-    cueParts[i-1].filename = el("title" + i).value
-    //console.log([cueParts[i-1].tracks[0].trackno, cueParts[i-1].tracks.last().trackno])
-    for (let j = cueParts[i-1].tracks[0].trackno; j <=cueParts[i-1].tracks.last().trackno; j++) {
-      //console.log(el("titleSong" + `${i}~${j}`).value + `, ${i}~${j}`)
-      for (let k of cueParts[i-1].tracks) {
-        //k is an unsaved CUE track.
-        k.title = el("titleSong" + `${i}~${k.trackno}`).value
-        k.mode = el("trackType" + `${i}~${k.trackno}`).value
-        k.start = createTs(
-          el("startM" + `${i}~${k.trackno}`).value,
-          el("startS" + `${i}~${k.trackno}`).value,
-          el("startF" + `${i}~${k.trackno}`).value)
+  for (let fileNo = 1; fileNo <= cueParts.length; fileNo++) {
+    let currentFile = cueParts[fileNo-1];
 
-        k.pregap = createTs(
-          el("pregapM" + `${i}~${k.trackno}`).value,
-          el("pregapS" + `${i}~${k.trackno}`).value,
-          el("pregapF" + `${i}~${k.trackno}`).value)
-        k.haspregap = (k.pregap == {mins: 0, secs: 0, frames: 0})
+    // not using the variable I just declared because I am writing to it
+    cueParts[fileNo-1].filename = el("title" + fileNo).value
+
+    if (currentFile.tracks.length == 0) {
+      continue;
+    }
+
+    //console.log([cueParts[i-1].tracks[0].trackno, cueParts[i-1].tracks.last().trackno])
+    // j is the track number of the current file
+    for (let j = currentFile.tracks[0].trackno; j <=currentFile.tracks.last().trackno; j++) {
+      //console.log(el("titleSong" + `${i}~${j}`).value + `, ${i}~${j}`)
+      for (let track of currentFile.tracks) {
+        //track is an unsaved CUE track.
+        track.title = el("titleSong" + `${fileNo}~${track.trackno}`).value
+        track.mode = el("trackType" + `${fileNo}~${track.trackno}`).value
+        track.start = createTs(
+          el("startM" + `${fileNo}~${track.trackno}`).value,
+          el("startS" + `${fileNo}~${track.trackno}`).value,
+          el("startF" + `${fileNo}~${track.trackno}`).value)
+
+        track.pregap = createTs(
+          el("pregapM" + `${fileNo}~${track.trackno}`).value,
+          el("pregapS" + `${fileNo}~${track.trackno}`).value,
+          el("pregapF" + `${fileNo}~${track.trackno}`).value)
+        track.haspregap = (track.pregap == {mins: 0, secs: 0, frames: 0})
       }
 
     }
@@ -407,7 +433,11 @@ function organize() {
   renderCue();
 }
 
-function addFile(name = "New track.wav") {
+function addFile(name) {
+  /*name = "New track.wav"*/
+  if (!name) {
+    name = tr("new_track") + ".wav"
+  }
   saveNames()
   var s = new CUEReference();
   s.filename = name;
@@ -433,7 +463,7 @@ function handleDrop(evt) {
 function createCue() {
   cueParts = [];
   var s = new CUEReference();
-  s.filename = "New track.wav";
+  s.filename = tr("new_track") + ".wav";
   s.position = 1;
   s.tracks = [new CUETrack()];
   s.tracks.last().trackno = 1;
@@ -508,35 +538,51 @@ function delSong(song) {
 function cueTrackToHTML(cueObj, cueParent) {
   return `
   <div id="song${cueParent.position}~${cueObj.trackno}" class="song setTrack">
-  <input value=${cueObj.trackno} disabled style="width: 60px; font-size: 30px; border: none;">
-  <input id="titleSong${cueParent.position}~${cueObj.trackno}" value="${cueObj.title}" type="text" style="font-size: 30px; width: 700px; border-bottom: solid black; outline: none;" onkeydown="handleKeyPress(event)">
+  <input value=${cueObj.trackno} disabled class=trackNumber style="width: 60px; font-size: 30px; border: none;">
+  <input class="nameInput" id="titleSong${cueParent.position}~${cueObj.trackno}" value="${cueObj.title}" type="text" style="" onkeydown="handleKeyPress(event)">
+  <div class="itemblock">
   <img src="upArrow.png" width="30" height="30" onclick="moveUp('${cueParent.position}~${cueObj.trackno}')">
   <img src="downArrow.png" width="30" height="30" onclick="moveDown('${cueParent.position}~${cueObj.trackno}')">
   <img src="dupe.png" width="30" height="30" onclick="dupe('${cueParent.position}~${cueObj.trackno}')">
   <img src="delete.png" width="30" height="30" onclick="delSong('${cueParent.position}~${cueObj.trackno}')">
+  </div>
   <br>
-  <span class=label>Start: </span>
-  <input id="startM${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.mins} class="label timer" type="number" min=0 onchange="organize()">
+  <span class=label>${tr("start")}: </span>
+  <input id="startM${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.mins.zp()} class="label timer" type="number" min=0 onchange="organize()">
   <span class=label>:</span>
-  <input id="startS${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.secs} class="label timer" type="number" min=0 max=60 onchange="organize()">
+  <input id="startS${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.secs.zp()} class="label timer" type="number" min=0 max=60 onchange="organize()">
   <span class=label>:</span>
-  <input id="startF${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.frames} class="label timer" type="number" min=0 max=75 onchange="organize()">
+  <input id="startF${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.frames.zp()} class="label timer" type="number" min=0 max=75 onchange="organize()">
   <br>
-  <span class=label>Pregap: </span>
-  <input id="pregapM${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.mins} class="label timer" type="number" min=0 onchange="organize()">
+  <span class=label>${tr("pregap")}: </span>
+  <input id="pregapM${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.mins.zp()} class="label timer" type="number" min=0 onchange="organize()">
   <span class=label>:</span>
-  <input id="pregapS${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.secs} class="label timer" type="number" min=0 max=60 onchange="organize()">
+  <input id="pregapS${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.secs.zp()} class="label timer" type="number" min=0 max=60 onchange="organize()">
   <span class=label>:</span>
-  <input id="pregapF${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.frames} class="label timer" type="number" min=0 max=75 onchange="organize()">
+  <input id="pregapF${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.frames.zp()} class="label timer" type="number" min=0 max=75 onchange="organize()">
   <br>
-  <span class=label>Track type: </span>
+  <span class=label>${tr("track_type")}: </span>
   <select id="trackType${cueParent.position}~${cueObj.trackno}" onchange="organize()">
-  <option value="AUDIO" ${cueObj.mode == "AUDIO"? "selected" : ""}>Audio</option>
-  <option value="MODE1/2048" ${cueObj.mode == "MODE1/2048" ? "selected" : ""}>Data (MODE1/2048)</option>
-  <option value="MODE1/2352" ${cueObj.mode == "MODE1/2352" ? "selected" : ""}>Data (MODE1/2352)</option>
-  <option value="MODE1/2336" ${cueObj.mode == "MODE1/2336" ? "selected" : ""}>Data (MODE1/2336)</option>
-  <option value="MODE1/2352" ${cueObj.mode == "MODE1/2352" ? "selected" : ""}>Data (MODE1/2352)</option>
-  <option value="CDG" ${cueObj.mode == "CDG" ? "selected" : ""}>CD+G Data</option>
+  <option value="AUDIO" ${cueObj.mode == "AUDIO"? "selected" : ""}>${tr("type_audio")}</option>
+
+  <optgroup label="MODE1">
+  <option value="MODE1/2048" ${cueObj.mode == "MODE1/2048" ? "selected" : ""}>${tr("type_data")} (MODE1/2048)</option>
+  <option value="MODE1/2352" ${cueObj.mode == "MODE1/2352" ? "selected" : ""}>${tr("type_data")} (MODE1/2352)</option>
+  </optgroup>
+
+  <optgroup label="MODE2">
+  <option value="MODE2/2048" ${cueObj.mode == "MODE2/2048" ? "selected" : ""}>${tr("type_data")} (MODE2/2048)</option>
+  <option value="MODE2/2324" ${cueObj.mode == "MODE2/2324" ? "selected" : ""}>${tr("type_data")} (MODE2/2324)</option>
+  <option value="MODE2/2336" ${cueObj.mode == "MODE2/2336" ? "selected" : ""}>${tr("type_data")} (MODE2/2336)</option>
+  <option value="MODE2/2352" ${cueObj.mode == "MODE2/2352" ? "selected" : ""}>${tr("type_data")} (MODE2/2352)</option>
+  </optgroup>
+
+  <option value="CDG" ${cueObj.mode == "CDG" ? "selected" : ""}>${tr("type_cdg")}</option>
+
+  <optgroup label="CDI">
+  <option value="CDI/2336" ${cueObj.mode == "CDI/2336" ? "selected" : ""}>${tr("type_cdi")} (CDI/2336)</option>
+  <option value="CDI/2352" ${cueObj.mode == "CDI/2352" ? "selected" : ""}>${tr("type_cdi")} (CDI/2352)</option>
+  </optgroup>
   </select>
   </div>
   `;
@@ -544,14 +590,16 @@ function cueTrackToHTML(cueObj, cueParent) {
 
 function cueToHTML(cueParent) {
   let html = `
-  <div id="song${cueParent.position}" class="song">
-  <input value=${cueParent.position} disabled style="width: 60px; font-size: 30px; border: none;">
-  <input id="title${cueParent.position}" value="${cueParent.filename}" type="text" style="font-size: 30px; width: 700px; border-bottom: solid black; outline: none;" onkeydown="handleKeyPress(event)">
+  <div id="song${cueParent.position}" class="song file">
+  <input value=${cueParent.position} class=trackNumber disabled style="width: 60px; font-size: 30px; border: none;">
+  <input class="nameInput" id="title${cueParent.position}" value="${cueParent.filename}" type="text" style="" onkeydown="handleKeyPress(event)">
+  <div class="itemblock">
   <img src="upArrow.png" width="30" height="30" onclick="moveUpFile(${cueParent.position})">
   <img src="downArrow.png" width="30" height="30" onclick="moveDownFile(${cueParent.position})">
   <img src="dupe.png" width="30" height="30" onclick="dupeFile(${cueParent.position})">
   <img src="delete.png" width="30" height="30" onclick="delFile(${cueParent.position})">
   <img src="add.png" width="30" height="30" onclick="addSong(${cueParent.position})">
+  </div>
   </div>
   `
   for (let cueObj of cueParent.tracks) {
@@ -562,6 +610,13 @@ function cueToHTML(cueParent) {
 
 function help() {
   var a = document.createElement("a");
-  a.href = "README.html";
+  a.href = tr("help_page");
   a.click()
+}
+
+function setLanguage() {
+  var lang_dropdown = el("language");
+  lang = lang_dropdown.value;
+  localStorage.setItem("language", lang);
+  alert(tr("save_and_reload"))
 }
