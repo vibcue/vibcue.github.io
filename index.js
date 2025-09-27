@@ -8,8 +8,44 @@ const addButton = `
 <div class="song" id="addButton" style="padding-left: 50; padding-right: 50; text-align: center; font-size: 30px;" onclick="addFile()"><p style="user-select: none;">${tr("add_file")}</p></div>
 `
 const saveButton = `
-<div class="song saveButton" style="padding-left: 25; padding-right: 25; text-align: center; font-size: 18px;" onmousedown="organize()"><a id="saveLink">${isMobile ? tr("save_link_mobile") : tr("save_link")}</a></div>
+<div class="song saveButton" style="padding-left: 25; padding-right: 25; text-align: center; font-size: 18px;" onmousedown="organize()">
+  <a id="saveLink">${tr("save_link")}</a>
+  <a id="saveLinkMobile" onpointerup="downloadBlob()">${tr("save_link_mobile")}</a>
+</div>
 `
+
+function downloadBlob() {
+  // dev.to/nombrekeff/download-file-from-blob-21ho
+  organize()
+  // Convert your blob into a Blob URL (a special url that points to an object in the browser's memory)
+  const blobUrl = el("saveLink").href
+  var name = "levelpack.cue"
+
+  // Create a link element
+  const link = document.createElement("a");
+
+  // Set link's href to point to the Blob URL
+  link.href = blobUrl;
+  link.download = name;
+
+  // Append link to the body
+  document.body.appendChild(link);
+
+  // Dispatch click event on the link
+  // This is necessary as link.click() does not work on the latest firefox
+  link.dispatchEvent(
+    new MouseEvent('click', { 
+      bubbles: true, 
+      cancelable: true, 
+      view: window 
+    })
+  );
+
+  // Remove link from body
+  document.body.removeChild(link);
+}
+
+
 function checkRightClick() {
   console.log("all good!")
 }
@@ -231,18 +267,20 @@ function renderCue() {
   el("content").innerHTML = `${cueParts.length > 0 ? saveButton : ""}` + megatron + addButton
 
   //Save button code
-  var blob = new Blob([createCueFile()], { type: 'text/plain' })
+  var blob = new Blob([createCueFile()], { type: 'application/x-cue' })
   var a = el("saveLink");
   a.download = "levelpack.cue";
   a.href = (window.webkitURL || window.URL).createObjectURL(blob);
   a.dataset.downloadurl = ['application/x-cue', a.download, a.href].join(':');
+
+
   //console.log("cueParts")
 
 }
 
 function toDoubleDigits(n) {
   if (n < 10) {
-    return '0' + n.toString();
+    return n.zp();
   }
   return n.toString();
 }
@@ -548,18 +586,22 @@ function cueTrackToHTML(cueObj, cueParent) {
   </div>
   <br>
   <span class=label>${tr("start")}: </span>
+  <div class="timestamp">
   <input id="startM${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.mins.zp()} class="label timer" type="number" min=0 onchange="organize()">
   <span class=label>:</span>
   <input id="startS${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.secs.zp()} class="label timer" type="number" min=0 max=60 onchange="organize()">
   <span class=label>:</span>
   <input id="startF${cueParent.position}~${cueObj.trackno}" value=${cueObj.start.frames.zp()} class="label timer" type="number" min=0 max=75 onchange="organize()">
+  </div>
   <br>
   <span class=label>${tr("pregap")}: </span>
+  <div class="timestamp">
   <input id="pregapM${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.mins.zp()} class="label timer" type="number" min=0 onchange="organize()">
   <span class=label>:</span>
   <input id="pregapS${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.secs.zp()} class="label timer" type="number" min=0 max=60 onchange="organize()">
   <span class=label>:</span>
   <input id="pregapF${cueParent.position}~${cueObj.trackno}" value=${cueObj.pregap.frames.zp()} class="label timer" type="number" min=0 max=75 onchange="organize()">
+  </div>
   <br>
   <span class=label>${tr("track_type")}: </span>
   <select id="trackType${cueParent.position}~${cueObj.trackno}" onchange="organize()">
