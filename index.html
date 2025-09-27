@@ -6,6 +6,11 @@
     var langs = {};
     var lang;
 
+    
+  </script>
+  <script src="lang/en.js"></script>
+  <script src="lang/es.js"></script>
+  <script>
     // Get language from local storage
     if (!localStorage.getItem("language")) {
       // Check browser language against available languages and set it to the appropriate language automatically
@@ -23,9 +28,8 @@
     function tr(strn) {
       return langs[lang][strn] || strn;
     }
+
   </script>
-  <script src="lang/en.js"></script>
-  <script src="lang/es.js"></script>
   <title>Vib-CUE</title>
   <style>
     @font-face {
